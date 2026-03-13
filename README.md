@@ -21,7 +21,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/YOUR_USERNAME/claude-session-saver.git
+git clone https://github.com/realpkuasule/claude-session-saver.git
 cd claude-session-saver
 
 # 运行安装脚本
