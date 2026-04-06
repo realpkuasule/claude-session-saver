@@ -20,6 +20,7 @@ from datetime import datetime
 
 # ----------- 配置 -----------
 LOG_ROOT = os.path.expanduser("~/claude-session-logs")
+SESSION_ROOT = os.path.expanduser("~/claude-sessions")
 CLAUDE_PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
 
 
@@ -266,6 +267,22 @@ def entries_to_markdown(entries: list[dict], session_id: str, session_file: str)
     return "\n".join(lines)
 
 
+def save_full_session(session_id: str, session_file: str, project_name: str, date_str: str, time_str: str) -> str:
+    """保存完整的原始会话 JSONL 内容，返回输出文件路径。"""
+    output_dir = os.path.join(SESSION_ROOT, project_name, date_str, time_str)
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, f"{session_id}.jsonl")
+
+    # 直接复制原始 jsonl 内容
+    with open(session_file, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    return output_file
+
+
 def export_session(session_id: str, session_file: str) -> str:
     """导出一个会话为 Markdown 文件，返回输出文件路径。"""
     # 解析会话
@@ -279,10 +296,34 @@ def export_session(session_id: str, session_file: str) -> str:
     # 转为 Markdown
     md_content = entries_to_markdown(entries, session_id, session_file)
 
-    # 写入文件
-    session_dir = os.path.join(LOG_ROOT, session_id)
-    os.makedirs(session_dir, exist_ok=True)
-    output_file = os.path.join(session_dir, "conversation.md")
+    # 构建目录结构: <项目名>/<创建日期>/<创建时间>
+    project_name = Path(session_file).parent.name
+
+    # 获取创建时间（从第一个条目的 timestamp）
+    first_ts = entries[0]["timestamp"] if entries else ""
+    if first_ts:
+        try:
+            if isinstance(first_ts, str):
+                dt = datetime.fromisoformat(first_ts.replace("Z", "+00:00"))
+            elif isinstance(first_ts, (int, float)):
+                dt = datetime.fromtimestamp(first_ts / 1000)
+            else:
+                dt = datetime.now()
+        except (ValueError, OSError):
+            dt = datetime.now()
+    else:
+        dt = datetime.now()
+
+    date_str = dt.strftime("%Y-%m-%d")
+    time_str = dt.strftime("%H-%M-%S")
+
+    # 保存完整原始会话
+    save_full_session(session_id, session_file, project_name, date_str, time_str)
+
+    # 写入文件: <项目名>/<创建日期>/<创建时间>.md
+    output_dir = os.path.join(LOG_ROOT, project_name, date_str)
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, f"{time_str}.md")
 
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(md_content)
