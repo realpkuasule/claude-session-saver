@@ -18,7 +18,6 @@ SCRIPT_NAME="claude-session-saver.py"
 SCRIPT_PATH="$HOME/$SCRIPT_NAME"
 LOG_DIR="$HOME/claude-session-logs"
 SETTINGS_FILE="$HOME/.claude/settings.json"
-BACKUP_SUFFIX=".backup.$(date +%s)"
 
 # ----------- 检查依赖 -----------
 echo "[1/5] 检查依赖..."
@@ -112,9 +111,6 @@ if [ ! -f "$SETTINGS_FILE" ]; then
     echo '{}' > "$SETTINGS_FILE"
 fi
 
-# 备份原配置
-cp "$SETTINGS_FILE" "${SETTINGS_FILE}${BACKUP_SUFFIX}"
-echo "✅ 已备份原配置: ${SETTINGS_FILE}${BACKUP_SUFFIX}"
 
 # 使用 Python 更新配置（安全地合并 JSON）
 python3 << 'PYTHON_SCRIPT'
@@ -190,7 +186,6 @@ echo ""
 echo "📁 导出脚本: $SCRIPT_PATH"
 echo "📁 日志目录: $LOG_DIR"
 echo "📁 配置文件: $SETTINGS_FILE"
-echo "📁 配置备份: ${SETTINGS_FILE}${BACKUP_SUFFIX}"
 echo ""
 echo "🎉 现在你可以正常使用 'claude' 命令"
 echo "   会话会自动保存到 $LOG_DIR"
