@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-05-31
+
+### Added
+- JSONL session backup to `~/claude-sessions/` directory
+- Auto session restore step in install.sh (step 6/6)
+- `batch_restore.py` utility for bulk exporting unexported sessions
+
+### Changed
+- Updated install.sh README with correct directory structure
+- Updated Python docstring to reflect actual output paths
+
+### Fixed
+- Removed obsolete `~/.claude/settings.json` backup from install.sh
+
 ## [1.0.0] - 2026-03-13
 
 ### Added

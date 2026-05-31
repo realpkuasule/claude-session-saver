@@ -7,7 +7,9 @@ claude-session-saver.py
   1. 作为 Stop hook 自动调用（从 stdin 读取 hook JSON，提取 session_id）
   2. 手动调用: python3 claude-session-saver.py [session_id]
 
-输出目录: ~/claude-session-logs/<session_id>/conversation.md
+输出:
+  - Markdown 日志: ~/claude-session-logs/<项目名>/<日期>/<时间>.md
+  - JSONL 原稿:   ~/claude-sessions/<项目名>/<日期>/<时间>/<session_id>.jsonl
 """
 
 import json

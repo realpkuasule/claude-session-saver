@@ -17,10 +17,11 @@ echo ""
 SCRIPT_NAME="claude-session-saver.py"
 SCRIPT_PATH="$HOME/$SCRIPT_NAME"
 LOG_DIR="$HOME/claude-session-logs"
+SESSION_DIR="$HOME/claude-sessions"
 SETTINGS_FILE="$HOME/.claude/settings.json"
 
 # ----------- 检查依赖 -----------
-echo "[1/5] 检查依赖..."
+echo "[1/6] 检查依赖..."
 
 if ! command -v python3 &> /dev/null; then
     echo "❌ 错误: 未找到 python3，请先安装 Python 3"
@@ -37,7 +38,7 @@ echo "✅ Claude Code: 已安装"
 
 # ----------- 安装导出脚本 -----------
 echo ""
-echo "[2/5] 安装导出脚本..."
+echo "[2/6] 安装导出脚本..."
 
 # 检查脚本是否在当前目录
 if [ -f "./$SCRIPT_NAME" ]; then
@@ -51,10 +52,13 @@ fi
 
 # ----------- 创建日志目录 -----------
 echo ""
-echo "[3/5] 创建日志目录..."
+echo "[3/6] 创建日志目录..."
 
 mkdir -p "$LOG_DIR"
 echo "✅ 已创建: $LOG_DIR"
+
+mkdir -p "$SESSION_DIR"
+echo "✅ 已创建: $SESSION_DIR"
 
 # 创建 README
 cat > "$LOG_DIR/README.md" << 'EOF'
@@ -72,11 +76,20 @@ cat > "$LOG_DIR/README.md" << 'EOF'
 ## 目录结构
 
 ```
-~/claude-session-logs/
-├── <session-id-1>/
-│   └── conversation.md
-├── <session-id-2>/
-│   └── conversation.md
+~/claude-session-logs/          ← Markdown 日志
+├── <project-name>/
+│   ├── <YYYY-MM-DD>/
+│   │   └── <HH-MM-SS>.md
+│   └── ...
+└── ...
+
+~/claude-sessions/              ← 原始 JSONL 备份
+├── <project-name>/
+│   ├── <YYYY-MM-DD>/
+│   │   ├── <HH-MM-SS>/
+│   │   │   └── <session-id>.jsonl
+│   │   └── ...
+│   └── ...
 └── ...
 ```
 
@@ -102,7 +115,7 @@ echo "✅ 已创建: $LOG_DIR/README.md"
 
 # ----------- 配置 Hook -----------
 echo ""
-echo "[4/5] 配置 Claude Code Hook..."
+echo "[4/6] 配置 Claude Code Hook..."
 
 # 检查 settings.json 是否存在
 if [ ! -f "$SETTINGS_FILE" ]; then
@@ -167,7 +180,7 @@ PYTHON_SCRIPT
 
 # ----------- 测试 -----------
 echo ""
-echo "[5/5] 测试安装..."
+echo "[5/6] 测试安装..."
 
 # 测试脚本是否可执行
 if python3 "$SCRIPT_PATH" &> /dev/null; then
@@ -177,18 +190,74 @@ else
     echo "✅ 导出脚本已安装"
 fi
 
+# ----------- 恢复已有会话 -----------
+echo ""
+echo "[6/6] 恢复已有会话..."
+
+# 使用 Python 批量导出已有但未导出过的会话
+python3 << 'PYEOF'
+import sys, os, glob
+import importlib.util
+
+script_path = os.path.expanduser("~/claude-session-saver.py")
+spec = importlib.util.spec_from_file_location("saver", script_path)
+saver = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(saver)
+
+projects_dir = os.path.expanduser("~/.claude/projects")
+sessions_dir = os.path.expanduser("~/claude-sessions")
+
+source = {}
+for f in glob.glob(os.path.join(projects_dir, "*", "*.jsonl")):
+    sid = os.path.splitext(os.path.basename(f))[0]
+    source[sid] = f
+
+exported = set()
+for f in glob.glob(os.path.join(sessions_dir, "*", "*", "*", "*.jsonl")):
+    exported.add(os.path.splitext(os.path.basename(f))[0])
+
+unexported = [(os.path.getmtime(p), sid, p) for sid, p in source.items() if sid not in exported]
+unexported.sort()
+
+if not unexported:
+    print("✅ 没有需要恢复的会话")
+else:
+    ok = skip = err = 0
+    for i, (mtime, sid, src_path) in enumerate(unexported):
+        try:
+            output = saver.export_session(sid, src_path)
+            if output:
+                ok += 1
+                if ok <= 5 or ok % 50 == 0:
+                    print(f"  [{i+1}/{len(unexported)}] ✅ {output}")
+            else:
+                skip += 1
+        except Exception as e:
+            err += 1
+            if err <= 3:
+                print(f"  [{i+1}/{len(unexported)}] ❌ {sid}: {e}", file=sys.stderr)
+    print(f"✅ 会话恢复完成: 成功 {ok}, 跳过 {skip}, 错误 {err}")
+PYEOF
+
+if [ $? -eq 0 ]; then
+    echo "✅ 已有会话已恢复"
+else
+    echo "⚠️  会话恢复遇到问题（不影响基本功能）"
+fi
+
 # ----------- 完成 -----------
 echo ""
 echo "=========================================="
 echo "✅ 安装完成！"
 echo "=========================================="
 echo ""
-echo "📁 导出脚本: $SCRIPT_PATH"
-echo "📁 日志目录: $LOG_DIR"
-echo "📁 配置文件: $SETTINGS_FILE"
+echo "📁 导出脚本:      $SCRIPT_PATH"
+echo "📁 Markdown 日志: $LOG_DIR"
+echo "📁 JSONL 备份:    $SESSION_DIR"
+echo "📁 配置文件:      $SETTINGS_FILE"
 echo ""
 echo "🎉 现在你可以正常使用 'claude' 命令"
-echo "   会话会自动保存到 $LOG_DIR"
+echo "   会话会自动保存到 $LOG_DIR 和 $SESSION_DIR"
 echo ""
 echo "💡 手动导出命令:"
 echo "   python3 $SCRIPT_PATH [session-id]"
