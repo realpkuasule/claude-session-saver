@@ -1,0 +1,36 @@
+{
+  "name": "claude-session-saver",
+  "version": "1.0.1",
+  "description": "自动保存 Claude Code 会话为 Markdown，支持 JSONL 备份 — npx 一行安装",
+  "bin": {
+    "claude-session-saver": "install.sh"
+  },
+  "files": [
+    "install.sh",
+    "claude-session-saver.py",
+    "batch_restore.py",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "session",
+    "save",
+    "export",
+    "markdown",
+    "backup",
+    "anthropic",
+    "cli"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/realpkuasule/claude-session-saver.git"
+  },
+  "bugs": {
+    "url": "https://github.com/realpkuasule/claude-session-saver/issues"
+  },
+  "homepage": "https://github.com/realpkuasule/claude-session-saver#readme"
+}

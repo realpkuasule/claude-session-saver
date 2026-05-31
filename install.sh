@@ -8,6 +8,9 @@
 
 set -e  # 遇到错误立即退出
 
+# 确定脚本自身所在目录（即使 cwd 不是此目录也能正确找到同目录下的 .py 文件）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "=========================================="
 echo "Claude Session Saver - 安装程序"
 echo "=========================================="
@@ -41,12 +44,12 @@ echo ""
 echo "[2/6] 安装导出脚本..."
 
 # 检查脚本是否在当前目录
-if [ -f "./$SCRIPT_NAME" ]; then
-    cp "./$SCRIPT_NAME" "$SCRIPT_PATH"
+if [ -f "$SCRIPT_DIR/$SCRIPT_NAME" ]; then
+    cp "$SCRIPT_DIR/$SCRIPT_NAME" "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
     echo "✅ 已安装: $SCRIPT_PATH"
 else
-    echo "❌ 错误: 未找到 $SCRIPT_NAME，请确保它在当前目录"
+    echo "❌ 错误: 未找到 $SCRIPT_NAME，请确保它与 install.sh 在同一目录"
     exit 1
 fi
 
