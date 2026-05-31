@@ -9,7 +9,12 @@
 set -e  # 遇到错误立即退出
 
 # 确定脚本自身所在目录（即使 cwd 不是此目录也能正确找到同目录下的 .py 文件）
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# PKG_DIR 由 Node.js 包装脚本 (cli.js) 设置，通过 __dirname 保证路径可靠
+if [ -n "$PKG_DIR" ]; then
+    SCRIPT_DIR="$PKG_DIR"
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
 echo "=========================================="
 echo "Claude Session Saver - 安装程序"

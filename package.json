@@ -1,11 +1,12 @@
 {
   "name": "claude-session-saver",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "自动保存 Claude Code 会话为 Markdown，支持 JSONL 备份 — npx 一行安装",
   "bin": {
-    "claude-session-saver": "install.sh"
+    "claude-session-saver": "cli.js"
   },
   "files": [
+    "cli.js",
     "install.sh",
     "claude-session-saver.py",
     "batch_restore.py",
